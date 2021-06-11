@@ -1,13 +1,12 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
-	"os"
+	url2 "net/url"
 	"time"
 )
 
@@ -49,6 +48,7 @@ func getList() ([]int, error) {
 	if err != nil {
 		return nil, err
 	}
+	//fmt.Println(string(body))
 	err = json.Unmarshal(body, &posts)
 	if err != nil {
 		return nil, err
@@ -57,6 +57,7 @@ func getList() ([]int, error) {
 	return posts.IDList(), nil
 }
 
+// 获得a有b没有的数字
 func difference(a, b []int) (diff []int) {
 	m := make(map[int]bool)
 	for _, item := range b {
@@ -67,6 +68,7 @@ func difference(a, b []int) (diff []int) {
 			diff = append(diff, item)
 		}
 	}
+	fmt.Printf("diff=%v\n", diff)
 	return
 }
 
@@ -75,24 +77,15 @@ func init() {
 }
 
 func push(id int) {
-	token := os.Getenv("HedwigToken")
-	channel := "@V2EXChannel"
-
 	for _, post := range posts {
 		if post.ID == id {
 			node := post.Node.Title
 			title := post.Title
 			link := post.Url
-			reqBody := &sendMessageReqBody{
-				ChatID: channel,
-				Text:   fmt.Sprintf("#%s %s %s", node, title, link),
-			}
-			reqBytes, err := json.Marshal(reqBody)
-			if err != nil {
-				return
-			}
-			url := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", token)
-			_, err = http.Post(url, "application/json", bytes.NewBuffer(reqBytes))
+			msg := fmt.Sprintf("#%s %s %s\n %s", node, title, link)
+			fmt.Printf("msg=%v\n", msg)
+			url := fmt.Sprintf("https://msg.qiaocco.com?msg=%v", url2.QueryEscape(msg))
+			_, err := http.Get(url)
 			if err != nil {
 				return
 			}
@@ -108,6 +101,7 @@ func main() {
 			time.Sleep(60 * time.Second)
 			continue
 		}
+		fmt.Printf("fetchIds=%v\nids=%v\n", fetchIds, ids)
 		newIds := difference(fetchIds, ids)
 		for _, id := range newIds {
 			log.Println(id)
