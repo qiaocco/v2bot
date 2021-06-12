@@ -37,20 +37,22 @@ var ids []int
 var posts = Posts{}
 
 func getList() ([]int, error) {
-
 	url := "https://www.v2ex.com/api/topics/latest.json"
 	resp, err := http.Get(url)
 	if err != nil {
+		log.Printf("get failed, err:%v\n", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
+		log.Printf("ReadAll failed, err:%v\n", err)
 		return nil, err
 	}
 	//fmt.Println(string(body))
 	err = json.Unmarshal(body, &posts)
 	if err != nil {
+		log.Printf("ReadAll failed, err:%v\n", err)
 		return nil, err
 	}
 
@@ -68,7 +70,8 @@ func difference(a, b []int) (diff []int) {
 			diff = append(diff, item)
 		}
 	}
-	fmt.Printf("diff=%v\n", diff)
+	diff = append(diff, 783130)
+	log.Printf("diff=%v\n", diff)
 	return
 }
 
@@ -82,11 +85,12 @@ func push(id int) {
 			node := post.Node.Title
 			title := post.Title
 			link := post.Url
-			msg := fmt.Sprintf("#%s %s %s\n %s", node, title, link)
-			fmt.Printf("msg=%v\n", msg)
+			msg := fmt.Sprintf("#%s %s %s", node, title, link)
+			log.Printf("msg=%v\n", msg)
 			url := fmt.Sprintf("https://msg.qiaocco.com?msg=%v", url2.QueryEscape(msg))
 			_, err := http.Get(url)
 			if err != nil {
+				log.Printf("http get failed: err:%v\n", err)
 				return
 			}
 
@@ -101,7 +105,7 @@ func main() {
 			time.Sleep(60 * time.Second)
 			continue
 		}
-		fmt.Printf("fetchIds=%v\nids=%v\n", fetchIds, ids)
+		log.Printf("fetchIds=%v\nids=%v\n", fetchIds, ids)
 		newIds := difference(fetchIds, ids)
 		for _, id := range newIds {
 			log.Println(id)
